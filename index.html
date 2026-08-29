@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Vestora Status</title>
+<meta name="description" content="Live availability for the Vestora platform." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;600;700&display=swap" rel="stylesheet" />
+<style>
+  /* ── Vestora design tokens, compiled from src/styles/tokens.css ─────────
+     Dark-only by canon (D6). Type is D22: Open Sans thin-first {300,600,700}.
+     Status colors are the D7 canon; blues are the DC-9 AA pair
+     (#58b8f5 text-ink, #189cf1 graphic). Do not invent values here — change
+     tokens.css first, then mirror. */
+  :root {
+    --bg: #080808;
+    --bg-2: #0f0f0f;
+    --card: rgba(255, 255, 255, 0.04);
+    --inset: rgba(0, 0, 0, 0.2);
+    --border: rgba(255, 255, 255, 0.1);
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    --blur: 14px;
+    --ink: #ededed;
+    --ink-2: #a0a0a0;
+    --blue-ink: #58b8f5;
+    --blue: #189cf1;
+    --good: #00c805;
+    --good-soft: rgba(0, 200, 5, 0.12);
+    --warn: #ffb800;
+    --warn-soft: rgba(255, 184, 0, 0.12);
+    --bad: #ff766e;
+    --bad-soft: rgba(255, 118, 110, 0.12);
+    --font: 'Open Sans', Arial, 'Helvetica Neue', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { color-scheme: dark; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font);
+    font-weight: 300;
+    line-height: 1.5;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 760px; margin: 0 auto; padding: 48px 24px 64px; }
+
+  header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 40px; }
+  .wordmark { font-size: 22px; font-weight: 700; letter-spacing: 0.02em; }
+  .wordmark .dot { color: var(--blue-ink); }
+  .page-label { font-size: 13px; font-weight: 300; color: var(--ink-2); letter-spacing: 0.14em; text-transform: uppercase; }
+
+  .banner {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(var(--blur));
+    padding: 26px 28px;
+    margin-bottom: 28px;
+  }
+  .banner h1 { font-size: 26px; font-weight: 300; line-height: 1.1; }
+  .banner .sub { font-size: 13px; color: var(--ink-2); margin-top: 4px; }
+
+  .pulse { width: 14px; height: 14px; border-radius: 50%; flex: none; position: relative; }
+  .pulse::after {
+    content: ''; position: absolute; inset: -5px; border-radius: 50%;
+    border: 1px solid currentColor; opacity: 0;
+    animation: ring 2.4s ease-out infinite;
+  }
+  @keyframes ring { 0% { transform: scale(0.6); opacity: 0.6; } 70% { transform: scale(1.25); opacity: 0; } 100% { opacity: 0; } }
+  .ok    { background: var(--good); color: var(--good); }
+  .warn  { background: var(--warn); color: var(--warn); }
+  .bad   { background: var(--bad);  color: var(--bad);  }
+  .idle  { background: var(--ink-2); color: var(--ink-2); }
+
+  .grid { display: grid; gap: 14px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 22px;
+    display: flex; align-items: center; gap: 14px;
+    backdrop-filter: blur(var(--blur));
+  }
+  .card .name { font-size: 15px; font-weight: 600; }
+  .card .detail { font-size: 13px; color: var(--ink-2); margin-top: 2px; }
+  .card .state {
+    margin-left: auto; font-size: 12px; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 5px 12px; border-radius: 999px;
+  }
+  .state.ok   { background: var(--good-soft); color: var(--good); }
+  .state.warn { background: var(--warn-soft); color: var(--warn); }
+  .state.bad  { background: var(--bad-soft);  color: var(--bad);  }
+  .state.idle { background: var(--inset); color: var(--ink-2); }
+  .dotmini { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+
+  .meta { margin-top: 30px; font-size: 12.5px; color: var(--ink-2); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+  .meta a { color: var(--blue-ink); text-decoration: none; }
+  .meta a:hover { text-decoration: underline; }
+
+  footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 12px; color: var(--ink-2); }
+
+  @media (max-width: 480px) {
+    .wrap { padding: 32px 16px 48px; }
+    .banner h1 { font-size: 21px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="wordmark">Vestora<span class="dot">.</span></div>
+    <div class="page-label">System status</div>
+  </header>
+
+  <div class="banner">
+    <div class="pulse idle" id="banner-dot"></div>
+    <div>
+      <h1 id="banner-title">Checking…</h1>
+      <div class="sub" id="banner-sub">Contacting the platform.</div>
+    </div>
+  </div>
+
+  <div class="grid" id="cards">
+    <div class="card" id="card-web">
+      <div class="dotmini idle" data-dot></div>
+      <div><div class="name">Web application</div><div class="detail" data-detail>—</div></div>
+      <div class="state idle" data-state>…</div>
+    </div>
+    <div class="card" id="card-api">
+      <div class="dotmini idle" data-dot></div>
+      <div><div class="name">Platform API &amp; database</div><div class="detail" data-detail>—</div></div>
+      <div class="state idle" data-state>…</div>
+    </div>
+    <div class="card" id="card-data">
+      <div class="dotmini idle" data-dot></div>
+      <div><div class="name">Market data</div><div class="detail" data-detail>—</div></div>
+      <div class="state idle" data-state>…</div>
+    </div>
+  </div>
+
+  <div class="meta">
+    <span id="checked">Last checked —</span>
+    <span>Refreshes every 60&nbsp;seconds · <a href="https://vestoraiq.com">vestoraiq.com</a></span>
+  </div>
+
+  <footer>
+    This page is hosted independently of the Vestora platform, so it stays
+    reachable when the platform is not. Questions:
+    <a style="color:var(--blue-ink);text-decoration:none" href="mailto:admin@vestoraiq.com">admin@vestoraiq.com</a>
+  </footer>
+</div>
+
+<script>
+  const ORIGIN = 'https://vestoraiq.com';
+  const $ = (id) => document.getElementById(id);
+
+  function setCard(card, cls, label, detail) {
+    const el = $(card);
+    el.querySelector('[data-dot]').className = 'dotmini ' + cls;
+    const st = el.querySelector('[data-state]');
+    st.className = 'state ' + cls;
+    st.textContent = label;
+    el.querySelector('[data-detail]').textContent = detail;
+  }
+
+  function setBanner(cls, title, sub) {
+    $('banner-dot').className = 'pulse ' + cls;
+    $('banner-title').textContent = title;
+    $('banner-sub').textContent = sub;
+  }
+
+  async function probe(path, timeoutMs) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), timeoutMs);
+    const started = performance.now();
+    try {
+      const res = await fetch(ORIGIN + path, { signal: ctrl.signal, cache: 'no-store' });
+      const ms = Math.round(performance.now() - started);
+      let body = null;
+      try { body = await res.json(); } catch {}
+      return { reachable: true, status: res.status, ms, body };
+    } catch {
+      return { reachable: false };
+    } finally {
+      clearTimeout(t);
+    }
+  }
+
+  const fmtAge = (iso) => {
+    if (!iso) return 'no successful sync recorded';
+    const h = (Date.now() - new Date(iso).getTime()) / 36e5;
+    if (h < 1) return 'updated within the hour';
+    if (h < 24) return 'updated ' + Math.round(h) + 'h ago';
+    return 'updated ' + Math.round(h / 24) + 'd ago';
+  };
+
+  async function tick() {
+    const [site, live, fresh] = await Promise.all([
+      probe('/', 8000),
+      probe('/api/health/live', 8000),
+      probe('/api/health/freshness', 10000),
+    ]);
+
+    // Web application — the page itself answering is the test.
+    if (site.reachable && site.status < 500) {
+      setCard('card-web', 'ok', 'Operational', 'Responding in ' + site.ms + ' ms');
+    } else if (site.reachable) {
+      setCard('card-web', 'bad', 'Disrupted', 'The site is returning errors.');
+    } else {
+      setCard('card-web', 'bad', 'Unreachable', 'The site is not responding.');
+    }
+
+    // API + database — /api/health/live requires a real DB round trip.
+    const apiOk = live.reachable && live.status === 200 && live.body && live.body.status === 'ok';
+    if (apiOk) {
+      setCard('card-api', 'ok', 'Operational', 'Database round trip in ' + live.body.db_ms + ' ms');
+    } else if (live.reachable) {
+      setCard('card-api', 'bad', 'Disrupted', 'The platform is degraded.');
+    } else {
+      setCard('card-api', 'bad', 'Unreachable', 'The API is not responding.');
+    }
+
+    // Market data freshness — stale is a caution, not an outage.
+    let dataCls = 'warn', dataLabel = 'Unknown', dataDetail = 'Freshness could not be read.';
+    if (fresh.reachable && fresh.body && Array.isArray(fresh.body.boards)) {
+      const stale = fresh.body.boards.filter((b) => b.stale);
+      const newest = fresh.body.boards.map((b) => b.last_ok_sync).sort().reverse()[0];
+      if (fresh.body.status === 'fresh') {
+        dataCls = 'ok'; dataLabel = 'Current';
+        dataDetail = 'All market feeds ' + fmtAge(newest) + '.';
+      } else {
+        dataCls = 'warn'; dataLabel = 'Delayed';
+        dataDetail = stale.length + ' market feed' + (stale.length === 1 ? '' : 's') + ' behind schedule.';
+      }
+    }
+    setCard('card-data', dataCls, dataLabel, dataDetail);
+
+    // Banner rolls the three up. Data delay alone never claims an outage.
+    if (!apiOk || !(site.reachable && site.status < 500)) {
+      setBanner('bad', 'Service disruption', 'Part of the platform is not responding. We are on it.');
+    } else if (dataCls === 'warn') {
+      setBanner('warn', 'Operational — data delayed', 'The app is up; a market data feed is catching up.');
+    } else {
+      setBanner('ok', 'All systems operational', 'Web, API, database, and market data are healthy.');
+    }
+
+    $('checked').textContent = 'Last checked ' + new Date().toLocaleTimeString();
+  }
+
+  tick();
+  setInterval(tick, 60_000);
+</script>
+</body>
+</html>
