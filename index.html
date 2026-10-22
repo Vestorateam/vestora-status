@@ -141,7 +141,7 @@
     </div>
     <div class="card" id="card-data">
       <div class="dotmini idle" data-dot></div>
-      <div><div class="name">Market data</div><div class="detail" data-detail>—</div></div>
+      <div><div class="name">Public records</div><div class="detail" data-detail>—</div></div>
       <div class="state idle" data-state>…</div>
     </div>
   </div>
@@ -159,7 +159,10 @@
 </div>
 
 <script>
-  const ORIGIN = 'https://vestoraiq.com';
+  // www, not the apex: the apex answers a 308 to www without CORS headers,
+  // so a cross-origin fetch through it fails and every card read
+  // "Unreachable" (found 2026-10-21).
+  const ORIGIN = 'https://www.vestoraiq.com';
   const $ = (id) => document.getElementById(id);
 
   function setCard(card, cls, label, detail) {
@@ -195,7 +198,7 @@
   }
 
   const fmtAge = (iso) => {
-    if (!iso) return 'no successful sync recorded';
+    if (!iso) return 'have no recorded refresh';
     const h = (Date.now() - new Date(iso).getTime()) / 36e5;
     if (h < 1) return 'updated within the hour';
     if (h < 24) return 'updated ' + Math.round(h) + 'h ago';
@@ -228,17 +231,19 @@
       setCard('card-api', 'bad', 'Unreachable', 'The API is not responding.');
     }
 
-    // Market data freshness — stale is a caution, not an outage.
+    // Public-record freshness (the weekly county refresh) — stale is a
+    // caution, not an outage. The probe reports `sources` since 2026-10-21.
     let dataCls = 'warn', dataLabel = 'Unknown', dataDetail = 'Freshness could not be read.';
-    if (fresh.reachable && fresh.body && Array.isArray(fresh.body.boards)) {
-      const stale = fresh.body.boards.filter((b) => b.stale);
-      const newest = fresh.body.boards.map((b) => b.last_ok_sync).sort().reverse()[0];
+    if (fresh.reachable && fresh.body && Array.isArray(fresh.body.sources)) {
+      const stale = fresh.body.sources.filter((s) => s.stale);
+      const county = fresh.body.sources.filter((s) => s.source !== 'daily-check');
+      const newest = county.map((s) => s.last_ok).filter(Boolean).sort().reverse()[0];
       if (fresh.body.status === 'fresh') {
         dataCls = 'ok'; dataLabel = 'Current';
-        dataDetail = 'All market feeds ' + fmtAge(newest) + '.';
+        dataDetail = 'County records ' + fmtAge(newest) + '.';
       } else {
         dataCls = 'warn'; dataLabel = 'Delayed';
-        dataDetail = stale.length + ' market feed' + (stale.length === 1 ? '' : 's') + ' behind schedule.';
+        dataDetail = 'The weekly county refresh is behind schedule.';
       }
     }
     setCard('card-data', dataCls, dataLabel, dataDetail);
@@ -247,9 +252,9 @@
     if (!apiOk || !(site.reachable && site.status < 500)) {
       setBanner('bad', 'Service disruption', 'Part of the platform is not responding. We are on it.');
     } else if (dataCls === 'warn') {
-      setBanner('warn', 'Operational — data delayed', 'The app is up; a market data feed is catching up.');
+      setBanner('warn', 'Operational — data delayed', 'The app is up; the county records refresh is catching up.');
     } else {
-      setBanner('ok', 'All systems operational', 'Web, API, database, and market data are healthy.');
+      setBanner('ok', 'All systems operational', 'Web, API, database, and county records are healthy.');
     }
 
     $('checked').textContent = 'Last checked ' + new Date().toLocaleTimeString();
